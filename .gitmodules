@@ -1,0 +1,3 @@
+[submodule "hipache"]
+	path = hipache
+	url = git@github.com:Turistforeningen/hipache.git
