@@ -5,3 +5,4 @@
 [submodule "containers/sentry"]
 	path = containers/sentry
 	url = git@github.com:Turistforeningen/sentry.git
+	branch = master
