@@ -2,3 +2,6 @@
 	path = hipache
 	url = git@github.com:Turistforeningen/hipache.git
 	branch = master
+[submodule "containers/sentry"]
+	path = containers/sentry
+	url = git@github.com:Turistforeningen/sentry.git
