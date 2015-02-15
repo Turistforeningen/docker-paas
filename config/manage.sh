@@ -64,6 +64,22 @@ function hipache_frontend_update {
 }
 
 #######################################
+# Remove Hipache routing configuration
+# Globals:
+#   REDISCLI
+# Arguments:
+#   $1 app name
+# Returns:
+#   None
+#######################################
+function hipache_frontend_remove {
+  local -r BASENAME=$1
+  local -r HOSTNAME="$1.${PAAS_APP_DOMAIN}"
+
+  ${REDISCLI} DEL frontend:${HOSTNAME}
+}
+
+#######################################
 # Set environment variable for application
 #######################################
 # Globals:
@@ -131,16 +147,19 @@ function app_start {
 
 #######################################
 # Stop application
-# TODO:
-#   Remove application from Hipache
 #######################################
 function app_stop {
+  local -r BASENAME=$(basename $1)
+
   echo "Entering $1..."
   cd $1
 
   echo "Stopping containers..."
   docker-compose stop
   docker-compose rm --force
+
+  echo "Updating routes..."
+  hipache_frontend_remove ${BASENAME}
 }
 
 #######################################
