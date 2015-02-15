@@ -148,17 +148,25 @@ function app_stop {
 #######################################
 case "$1" in
   start)
-    for path in ${PAAS_APP_DIR}/*; do
-      app_start ${path}
-    done
+    if [[ $2 ]]; then
+      app_start "${PAAS_APP_DIR}/$2"
+    else
+      for path in ${PAAS_APP_DIR}/*; do
+        app_start ${path}
+      done
+    fi
 
     exit 0
     ;;
 
   stop)
-    for path in ${PAAS_APP_DIR}/*; do
-      app_stop ${path}
-    done
+    if [[ $2 ]]; then
+      app_stop "${PAAS_APP_DIR}/$2"
+    else
+      for path in ${PAAS_APP_DIR}/*; do
+        app_stop ${path}
+      done
+    fi
 
     exit 0
     ;;
