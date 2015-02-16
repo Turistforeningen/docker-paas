@@ -3,7 +3,7 @@
 # Docker-Compose app management commands
 # Globals:
 #   PAAS_APP_DOMAIN
-#   PAAS_ADD_DIR
+#   PAAS_APP_DIR
 #   PAAS_HIPACHE_DIR
 
 readonly REDISCLI='docker run --link hipache_redis_1:redis redis:2.8 redis-cli -h redis'
