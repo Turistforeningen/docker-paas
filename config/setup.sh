@@ -39,7 +39,7 @@ cat >> /etc/environment <<EOF
 # Docker PAAS env vars
 export PAAS_HIPACHE_DIR=/var/www/hipache
 export PAAS_APP_DOMAIN=app.dnt.privat
-export PAAS_APP_DIR=/var/www/containers
+export PAAS_APP_DIR=/var/www/apps
 EOF
 
 # Append some stuff to .bashrc
