@@ -120,12 +120,18 @@ function hipache_config_get {
 
 #######################################
 # Start application
+# Arguments:
+#   - $1 APP_NAME
+#   - $2 APP_PATH
+#   - $3 REBUILD
 #######################################
 function app_start {
-  local -r BASENAME=$(basename $1)
+  local -r APP_NAME=$1
+  local -r APP_PATH=$2
+  local -r REBUILD=$3
 
-  echo "Entering $1..."
-  cd $1
+  echo "Entering ${APP_PATH}..."
+  cd ${APP_PATH}
 
   # Create a subshell to prevent poluting our environment since we need to
   # export the necessary environemnt variables for this application.
@@ -134,104 +140,164 @@ function app_start {
     while read -r env; do
       echo ${env}
       export ${env}
-    done < <(hipache_config_get ${BASENAME})
+    done < <(hipache_config_get ${APP_NAME})
+
+    if [[ ${REBUILD} ]]; then
+      echo "(Re)building containers..."
+      docker-compose pull && docker-compose build || exit 1
+    fi
 
     echo "Starting containers..."
-    docker-compose build
-    docker-compose up -d
+    docker-compose up -d || exit 1
   )
 
   echo "Updating routes..."
-  hipache_frontend_update ${BASENAME} $(docker-compose port www 8080)
+  hipache_frontend_update ${APP_NAME} $(docker-compose port www 8080)
 }
 
 #######################################
 # Stop application
+# Arguments:
+#   - $1 APP_NAME
+#   - $2 APP_PATH
+#   - $3 RM
 #######################################
 function app_stop {
-  local -r BASENAME=$(basename $1)
+  local -r APP_NAME=$1
+  local -r APP_PATH=$2
 
-  echo "Entering $1..."
-  cd $1
+  echo "Entering ${APP_PATH}..."
+  cd ${APP_PATH}
 
   echo "Stopping containers..."
-  docker-compose stop
-  docker-compose rm --force
+  docker-compose stop || exit 1
+
+  if [[ $3 ]]; then
+    echo "Removing container data..."
+    docker-compose rm --force || exit 1
+  fi
 
   echo "Updating routes..."
-  hipache_frontend_remove ${BASENAME}
+  hipache_frontend_remove ${APP_NAME}
 }
 
 #######################################
 # CLI definition
+# Arguments:
+#   - $1 APP_NAME
+#   - $2 CMD
 #######################################
-case "$1" in
-  start)
-    if [[ $2 ]]; then
-      app_start "${PAAS_APP_DIR}/$2"
-    else
-      for path in ${PAAS_APP_DIR}/*; do
-        app_start ${path}
-      done
+
+APP_NAME=$1
+
+# Is it hipache you
+if [[ ${APP_NAME} == "hipache" ]]; then
+  APP_PATH="${PAAS_HIPACHE_DIR}"
+else
+  APP_PATH="${PAAS_APP_DIR}/${APP_NAME}"
+fi
+
+# Check if app exists
+if [[ ! -d "${APP_PATH}" && $2 != "add" ]]; then
+  echo "The application '${APP_NAME}' does not exist!"
+  exit 1
+fi
+
+# CLI commands
+case "$2" in
+  add)
+    if [[ $3 == "-h" || $3 == "--help" ]]; then
+      echo "Usage: docker-paas [APPLICATION] add [GIT_REPO] [GIT_BRANCH]"
+      exit 0
     fi
 
-    exit 0
-    ;;
-
-  stop)
-    if [[ $2 ]]; then
-      app_stop "${PAAS_APP_DIR}/$2"
-    else
-      for path in ${PAAS_APP_DIR}/*; do
-        app_stop ${path}
-      done
-    fi
-
-    exit 0
+    echo "Add not implemented"
+    exit 1
     ;;
 
   config)
-    APP=$2
-    KEY=$3
-    VAL=$4
+    if [[ $3 == "-h" || $3 == "--help" ]]; then
+      echo "Usage: docker-paas [APPLICATION] config [KEY [VAL|--rm]]"
+      exit 0
+    fi
 
-    if [[ ${APP} ]]; then
-      if [[ ${KEY} && ${VAL} ]]; then
-        if [[ ${VAL} == "--rm" ]]; then
-          hipache_config_set ${APP} ${KEY}
-        else
-          hipache_config_set ${APP} ${KEY} ${VAL}
-        fi
+    APP_CONFIG_KEY=$3
+    APP_CONFIG_VAL=$4
+
+    if [[ ${APP_CONFIG_KEY} && ${APP_CONFIG_VAL} ]]; then
+      if [[ ${APP_CONFIG_VAL} == "--rm" ]]; then
+        hipache_config_set ${APP_NAME} ${APP_CONFIG_KEY}
+        exit 0
       else
-        hipache_config_get ${APP} # ${KEY}
+        hipache_config_set ${APP_NAME} ${APP_CONFIG_KEY} ${APP_CONFIG_VAL}
+        exit 0
       fi
     else
-      echo "Usage: manage.sh config APP KEY [VAL]"
-      exit 1
+      hipache_config_get ${APP_NAME}
+      exit 0
     fi
+
     ;;
 
-  hipache)
-    case $2 in
-      "start")
-        hipache_start
-        exit 0
-        ;;
+  start)
+    APP_START_HARD=false
+    APP_START_SOFT=false
 
-      "stop")
-        echo "Command Error: Not Implemented"
-        exit 1
-        ;;
+    if [[ $3 == "-h" || $3 == "--help" ]]; then
+      echo "Usage: docker-paas [APPLICATION] start [--rebuild]"
+      exit 0
+    fi
 
-      *)
-        echo "Usage: manage.sh hipache [stop|start]"
-        exit 1
-        ;;
-    esac
+    for arg; do
+      if [[ $arg == "--rebuild" ]]; then
+        APP_START_HARD=true
+      fi
+    done
+
+    if [[ $APP_NAME == "hipache" ]]; then
+      hipache_start
+      exit 0
+    else
+      app_start $APP_NAME $APP_PATH $APP_START_HARD
+      exit 0
+    fi
+
+    ;;
+
+  status)
+    echo "Status not implemeted"
+    exit 1
+    ;;
+
+  stop)
+    APP_STOP_RM=false
+
+    for arg; do
+      if [[ $arg == "--rm" ]]; then
+        APP_STOP_RM=true
+      fi
+    done
+
+    app_stop $APP_NAME $APP_PATH $APP_STOP_RM
+    exit 0
     ;;
 
   *)
-    echo "Usage: manage.sh [start|stop]"
+    cat << EOF
+Docker PaaS by @turistforeningen
+
+Usage:
+  docker-paas [APPLICATION] [COMMAND] [ARGS...]
+  docker-paas -h|--help
+
+Commands:
+  add     Add a new application
+  config  Manage app environment variables
+  run     Run command on application
+  start   Start existing application
+  status  Get status of application
+  stop    Stop running application
+EOF
     exit 1
     ;;
 esac

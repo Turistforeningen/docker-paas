@@ -87,14 +87,14 @@ manage.sh hipache stop
 **Start and stop APPs:**
 
 ```
-manage.sh start [<APP>]
-manage.sh stop [<APP>]
+manage.sh <APP> start
+manage.sh <APP> stop
 ```
 
 **Configure APPs:**
 
 ```
-manage.sh configure <APP> [<KEY> [<VAL>] [--rm]]
+manage.sh <APP> configure [<KEY> [<VAL>] [--rm]]
 ```
 
 ## [MIT Licensed](https://github.com/Turistforeningen/docker-paas/blob/master/LICENSE)
