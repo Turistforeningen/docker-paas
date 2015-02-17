@@ -21,16 +21,15 @@ var
      |-- config
      |   |-- setup.sh
      |   +-- manage.sh
-     +-- containers
+     +-- apps
           +-- myapp
-               |-- config.json
                |-- docker-compose.yml
                +-- Dockerfile
 ```
 
 ## Applications
 
-Applications must be placed inside the `/containers` directory.
+Applications must be placed inside the `/apps` directory.
 
 ### Web-workers
 
