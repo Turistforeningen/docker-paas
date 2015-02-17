@@ -14,5 +14,6 @@ pids
 logs
 results
 
+apps/*
 .vagrant/
 
