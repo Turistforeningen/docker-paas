@@ -21,74 +21,83 @@ readonly DOCKER0_IP=$(
 #   REDISCLI
 #   DOCKER0_IP
 # Arguments:
-#   $1 app name
-#   $2 app ports (new line seperated)
+#   1 APP_NAME
+#   2 APP_PORTS (new line seperated)
 # Returns:
 #   None
 #######################################
 function hipache_frontend_update {
-  local -r BASENAME=$1
-  local -r HOSTNAME="$1.${PAAS_APP_DOMAIN}"
-  local -r PORTS="$2"
+  local -r APP_NAME=$1
+  local -r APP_HOSTNAME="$1.${PAAS_APP_DOMAIN}"
+  local -r APP_PORTS="$2"
 
-  ${REDISCLI} DEL frontend:${HOSTNAME}
-  ${REDISCLI} RPUSH frontend:${HOSTNAME} ${BASENAME}
+  ${REDISCLI} DEL frontend:${APP_HOSTNAME}
+  ${REDISCLI} RPUSH frontend:${APP_HOSTNAME} ${APP_NAME}
 
   while read -r line; do
     port=`echo ${line} | awk -F: '{print $2}'`
     addr="http://$DOCKER0_IP:$port"
 
-    ${REDISCLI} RPUSH frontend:${HOSTNAME} $addr
+    ${REDISCLI} RPUSH frontend:${APP_HOSTNAME} $addr
 
-  done < <(echo "$PORTS")
+  done < <(echo "$APP_PORTS")
 
-  ${REDISCLI} LRANGE frontend:${HOSTNAME} 0 -1
+  ${REDISCLI} LRANGE frontend:${APP_HOSTNAME} 0 -1
 }
 
 #######################################
 # Remove Hipache routing configuration
 # Globals:
+#   PAAS_APP_DOMAIN
 #   REDISCLI
 # Arguments:
-#   $1 app name
+#   1 APP_NAME
 # Returns:
 #   None
 #######################################
 function hipache_frontend_remove {
-  local -r BASENAME=$1
-  local -r HOSTNAME="$1.${PAAS_APP_DOMAIN}"
+  local -r APP_NAME=$1
+  local -r APP_HOSTNAME="$1.${PAAS_APP_DOMAIN}"
 
-  ${REDISCLI} DEL frontend:${HOSTNAME}
+  ${REDISCLI} DEL frontend:${APP_HOSTNAME}
 }
 
 #######################################
 # Set environment variable for application
-#######################################
 # Globals:
 #   PAAS_APP_DOMAIN
+#   REDIS_CLI
 # Arguments:
-#   $1 app name
-#   $2 environment variable key
-#   $2 environment variable val
+#   1 APP_NAME
+#   2 KEY - environment variable key
+#   2 VAL - environment variable val
 # Returns:
 #   None
+#######################################
 function hipache_config_set {
-  local -r HOSTNAME="$1.${PAAS_APP_DOMAIN}"
+  local -r APP_HOSTNAME="$1.${PAAS_APP_DOMAIN}"
   local -r KEY="$2"
   local -r VAL="$3"
 
   if [[ ${VAL} ]]; then
-    ${REDISCLI} HSET config:${HOSTNAME} ${KEY} "${VAL}"
+    ${REDISCLI} HSET config:${APP_HOSTNAME} ${KEY} "${VAL}"
   else
-    ${REDISCLI} HDEL config:${HOSTNAME} ${KEY}
+    ${REDISCLI} HDEL config:${APP_HOSTNAME} ${KEY}
   fi
 }
 
 #######################################
 # Get environment variables for application
+# Globals:
+#   PAAS_APP_DOMAIN
+#   REDIS_CLI
+# Arguments:
+#   1 APP_NAME
+# Returns:
+#   None
 #######################################
 function hipache_config_get {
-  local -r HOSTNAME="$1.${PAAS_APP_DOMAIN}"
+  local -r APP_HOSTNAME="$1.${PAAS_APP_DOMAIN}"
 
   while read -r line; do
     if [[ ${key} ]]; then
@@ -97,20 +106,20 @@ function hipache_config_get {
     else
       key=${line}
     fi
-  done < <(${REDISCLI} HGETALL config:${HOSTNAME})
+  done < <(${REDISCLI} HGETALL config:${APP_HOSTNAME})
 }
 
 #######################################
 # Create new application
 # Globals:
-#   - None
+#   None
 # Arguments:
-#   - $1 APP_NAME
-#   - $2 APP_PATH
-#   - $3 APP_REPO
-#   - $4 APP_BRANCH
+#   1 APP_NAME
+#   2 APP_PATH
+#   3 APP_REPO
+#   4 APP_BRANCH
 # Returns:
-#   - None
+#   None
 #######################################
 function app_create {
   local -r APP_NAME=$1
@@ -131,11 +140,15 @@ function app_create {
 
 #######################################
 # Start application
+# Globals:
+#   None
 # Arguments:
-#   - $1 APP_NAME
-#   - $2 APP_PATH
-#   - $3 CONTAINER_REBUILD
-#   - $4 ROUTE_UPDATE
+#   1 APP_NAME
+#   2 APP_PATH
+#   3 CONTAINER_REBUILD
+#   4 ROUTE_UPDATE
+# Returns:
+#   None
 #######################################
 function app_start {
   local -r APP_NAME=$1
@@ -175,11 +188,15 @@ function app_start {
 
 #######################################
 # Stop application
+# Globals:
+#   None
 # Arguments:
-#   - $1 APP_NAME
-#   - $2 APP_PATH
-#   - $3 CONTAINER_RM
-#   - $4 ROUTE_UPDATE
+#   1 APP_NAME
+#   2 APP_PATH
+#   3 CONTAINER_RM
+#   4 ROUTE_UPDATE
+# Returns:
+#   None
 #######################################
 function app_stop {
   local -r APP_NAME=$1
@@ -207,11 +224,11 @@ function app_stop {
 #######################################
 # CLI definition
 # Arguments:
-#   - $1 APP_NAME
-#   - $2 CMD
+#   1 APP_NAME
+#   2 CMD
 #######################################
-
 APP_NAME=$1
+CMD=$2
 
 # Is it hipache you
 if [[ "${APP_NAME}" == "hipache" ]]; then
@@ -221,19 +238,19 @@ else
 fi
 
 # Check if app does not exist
-if [[ ! -d "${APP_PATH}" && $2 != "add" ]]; then
+if [[ ! -d "${APP_PATH}" && "${CMD}" != "add" ]]; then
   echo "The application '${APP_NAME}' does not exist!"
   exit 1
 fi
 
 # Check if app does exists when creating a new app
-if [[   -d "${APP_PATH}" && $2 == "add" ]]; then
+if [[   -d "${APP_PATH}" && "${CMD}" == "add" ]]; then
   echo "The application name '${APP_AME}' has already been taken!"
   exit 1
 fi
 
 # CLI commands
-case "$2" in
+case "${CMD}" in
   add)
     if [[ "$3" == "-h" || "$3" == "--help" ]]; then
       echo "Usage: docker-paas [APPLICATION] add [GIT_REPO] [GIT_BRANCH]"
