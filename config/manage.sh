@@ -126,7 +126,7 @@ function app_start {
       export ${env}
     done < <(hipache_config_get ${APP_NAME})
 
-    if [[ ${CONTAINER_REBUILD} == true ]]; then
+    if [[ "${CONTAINER_REBUILD}" == "true" ]]; then
       echo "(Re)building containers..."
       docker-compose pull && docker-compose build || exit 1
     fi
@@ -135,7 +135,7 @@ function app_start {
     docker-compose up -d || exit 1
   )
 
-  if [[ ${ROUTE_UPDATE} == true ]]; then
+  if [[ "${ROUTE_UPDATE}" == "true" ]]; then
     echo "Updating routes..."
     hipache_frontend_update ${APP_NAME} $(docker-compose port www 8080)
   fi
@@ -161,12 +161,12 @@ function app_stop {
   echo "Stopping containers..."
   docker-compose stop || exit 1
 
-  if [[ $CONTAINER_RM == true ]]; then
+  if [[ "${CONTAINER_RM}" == "true" ]]; then
     echo "Removing container data..."
     docker-compose rm --force || exit 1
   fi
 
-  if [[ $ROUTE_UPDATE == true ]]; then
+  if [[ "${ROUTE_UPDATE}" == "true" ]]; then
     echo "Updating routes..."
     hipache_frontend_remove ${APP_NAME}
   fi
@@ -182,13 +182,13 @@ function app_stop {
 APP_NAME=$1
 
 # Is it hipache you
-if [[ ${APP_NAME} == "hipache" ]]; then
+if [[ "${APP_NAME}" == "hipache" ]]; then
   APP_PATH="${PAAS_HIPACHE_DIR}"
 else
   APP_PATH="${PAAS_APP_DIR}/${APP_NAME}"
 fi
 
-# Check if app exists
+# Check if app does not exist
 if [[ ! -d "${APP_PATH}" && $2 != "add" ]]; then
   echo "The application '${APP_NAME}' does not exist!"
   exit 1
@@ -197,7 +197,7 @@ fi
 # CLI commands
 case "$2" in
   add)
-    if [[ $3 == "-h" || $3 == "--help" ]]; then
+    if [[ "$3" == "-h" || "$3" == "--help" ]]; then
       echo "Usage: docker-paas [APPLICATION] add [GIT_REPO] [GIT_BRANCH]"
       exit 0
     fi
@@ -207,7 +207,7 @@ case "$2" in
     ;;
 
   config)
-    if [[ $3 == "-h" || $3 == "--help" ]]; then
+    if [[ "$3" == "-h" || "$3" == "--help" ]]; then
       echo "Usage: docker-paas [APPLICATION] config [KEY [VAL|--rm]]"
       exit 0
     fi
@@ -216,7 +216,7 @@ case "$2" in
     APP_CONFIG_VAL=$4
 
     if [[ ${APP_CONFIG_KEY} && ${APP_CONFIG_VAL} ]]; then
-      if [[ ${APP_CONFIG_VAL} == "--rm" ]]; then
+      if [[ "${APP_CONFIG_VAL}" == "--rm" ]]; then
         hipache_config_set ${APP_NAME} ${APP_CONFIG_KEY}
         exit 0
       else
@@ -231,7 +231,7 @@ case "$2" in
     ;;
 
   start)
-    if [[ $3 == "-h" || $3 == "--help" ]]; then
+    if [[ "$3" == "-h" || "$3" == "--help" ]]; then
       echo "Usage: docker-paas [APPLICATION] start [--rebuild]"
       exit 0
     fi
@@ -240,12 +240,12 @@ case "$2" in
     APP_START_ROUTE_UPDATE=true
 
     for arg; do
-      if [[ $arg == "--rebuild" ]]; then
+      if [[ "${arg}" == "--rebuild" ]]; then
         APP_START_REBUILD=true
       fi
     done
 
-    if [[ $APP_NAME == "hipache" ]]; then
+    if [[ "${APP_NAME}" == "hipache" ]]; then
       APP_START_ROUTE_UPDATE=false
     fi
 
@@ -259,26 +259,26 @@ case "$2" in
     ;;
 
   stop)
-    if [[ $3 == "-h" || $3 == "--help" ]]; then
+    if [[ "$3" == "-h" || "$3" == "--help" ]]; then
       echo "Usage: docker-paas [APPLICATION] stop [--rm]"
       exit 0
     fi
 
     APP_STOP_RM=false
-    APP_START_ROUTE_UPDATE=true
+    APP_STOP_ROUTE_UPDATE=true
 
     for arg; do
-      if [[ $arg == "--rm" ]]; then
+      if [[ "${arg}" == "--rm" ]]; then
         APP_STOP_RM=true
       fi
     done
 
-    if [[ $APP_NAME == "hipache" ]]; then
+    if [[ "${APP_NAME}" == "hipache" ]]; then
       APP_STOP_RM=false
-      APP_START_ROUTE_UPDATE=false
+      APP_STOP_ROUTE_UPDATE=false
     fi
 
-    app_stop $APP_NAME $APP_PATH $APP_START_RM $APP_START_ROUTE_UPDATE
+    app_stop $APP_NAME $APP_PATH $APP_STOP_RM $APP_STOP_ROUTE_UPDATE
     exit 0
     ;;
 
