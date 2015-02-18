@@ -120,11 +120,14 @@ function app_start {
   # Create a subshell to prevent poluting our environment since we need to
   # export the necessary environemnt variables for this application.
   (
-    echo "Fetching environment..."
-    while read -r env; do
-      echo ${env}
-      export ${env}
-    done < <(hipache_config_get ${APP_NAME})
+    # Skip fetching environment if it's hipache we're starting
+    if [[ ${APP_NAME} != "hipache" ]]; then
+      echo "Fetching environment..."
+      while read -r env; do
+        echo ${env}
+        export ${env}
+      done < <(hipache_config_get ${APP_NAME})
+    fi
 
     if [[ "${CONTAINER_REBUILD}" == "true" ]]; then
       echo "(Re)building containers..."
