@@ -258,6 +258,34 @@ function app_run {
 }
 
 #######################################
+# Update source code an application
+# Globals:
+#   None
+# Arguments:
+#   1 APP_NAME
+#   2 APP_PATH
+#   3 APP_REBUILD
+#   4 ROUTE_UPDATE
+# Returns:
+#   None
+#######################################
+function app_update {
+  local -r APP_NAME=$1
+  local -r APP_PATH=$2
+  local -r APP_REBUILD=$3
+  local -r ROUTE_UPDATE=$4
+
+  echo "Entering ${APP_PATH}..."
+  cd ${APP_PATH}
+
+  echo "Updating git repository..."
+  git pull -f origin || exit 1
+  git submodule update
+
+  app_start $APP_NAME $APP_PATH $APP_REBUILD $ROUTE_UPDATE
+}
+
+#######################################
 # CLI definition
 # Arguments:
 #   1 APP_NAME
@@ -389,6 +417,29 @@ case "${CMD}" in
     fi
 
     app_stop $APP_NAME $APP_PATH $APP_STOP_RM $APP_STOP_ROUTE_UPDATE
+    exit 0
+    ;;
+
+  update)
+    if [[ "$3" == "-h" || "$3" == "--help" ]]; then
+      echo "Usage: docker-paas [APPLICATION] update [--rebuild]"
+      exit 0
+    fi
+
+    APP_REBUILD=false
+    APP_ROUTE_UPDATE=true
+
+    for arg; do
+      if [[ "${arg}" == "--rebuild" ]]; then
+        APP_START_REBUILD=true
+      fi
+    done
+
+    if [[ "${APP_NAME}" == "hipache" ]]; then
+      APP_ROUTE_UPDATE=false
+    fi
+
+    app_update ${APP_NAME} ${APP_PATH} ${APP_REBUILD} ${APP_ROUTE_UPDATE}
     exit 0
     ;;
 
