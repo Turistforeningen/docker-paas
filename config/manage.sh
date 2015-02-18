@@ -242,7 +242,7 @@ function app_run {
     fi
 
     echo "Executing command..."
-    docker-compose run ${APP_WORKER} ${APP_CMD}
+    docker-compose run --rm ${APP_WORKER} ${APP_CMD}
   )
 }
 
