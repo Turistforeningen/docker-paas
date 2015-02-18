@@ -84,6 +84,12 @@ manage.sh hipache start
 manage.sh hipache stop
 ```
 
+**Create APP:**
+
+```
+manage.sh <APP> add <GIT_REPO> <GIT_BRANCH>
+```
+
 **Start and stop APPs:**
 
 ```
@@ -92,6 +98,8 @@ manage.sh <APP> stop
 ```
 
 **Configure APPs:**
+
+Configure environment variables per application.
 
 ```
 manage.sh <APP> configure [<KEY> [<VAL>] [--rm]]
