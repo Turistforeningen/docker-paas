@@ -101,6 +101,35 @@ function hipache_config_get {
 }
 
 #######################################
+# Create new application
+# Globals:
+#   - None
+# Arguments:
+#   - $1 APP_NAME
+#   - $2 APP_PATH
+#   - $3 APP_REPO
+#   - $4 APP_BRANCH
+# Returns:
+#   - None
+#######################################
+function app_create {
+  local -r APP_NAME=$1
+  local -r APP_PATH=$2
+  local -r APP_REPO=$3
+  local -r APP_BRANCH=$4
+
+  echo "Cloning repository..."
+  git clone -v --single-branch --branch ${APP_BRANCH} -- ${APP_REPO} ${APP_PATH}
+
+  echo "Entering ${APP_PATH}..."
+  cd ${APP_PATH}
+
+  echo "Updating submodules..."
+  git submodule init
+  git submodule update
+}
+
+#######################################
 # Start application
 # Arguments:
 #   - $1 APP_NAME
@@ -197,6 +226,12 @@ if [[ ! -d "${APP_PATH}" && $2 != "add" ]]; then
   exit 1
 fi
 
+# Check if app does exists when creating a new app
+if [[   -d "${APP_PATH}" && $2 == "add" ]]; then
+  echo "The application name '${APP_AME}' has already been taken!"
+  exit 1
+fi
+
 # CLI commands
 case "$2" in
   add)
@@ -205,8 +240,14 @@ case "$2" in
       exit 0
     fi
 
-    echo "Add not implemented"
-    exit 1
+    APP_REPO=$3
+    APP_BRANCH=$4
+
+    if [[ -z ${APP_BRANCH} ]]; then
+      APP_BRANCH=master
+    fi
+
+    app_create ${APP_NAME} ${APP_PATH} ${APP_REPO} ${APP_BRANCH}
     ;;
 
   config)
