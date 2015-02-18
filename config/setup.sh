@@ -46,6 +46,7 @@ EOF
 echo "Appending user local environment variables"
 cat >> /home/vagrant/.bashrc <<EOF
 
+alias docker-paas='/var/www/config/manage.sh'
 cd /var/www
 EOF
 
