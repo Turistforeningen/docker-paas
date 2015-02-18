@@ -221,6 +221,31 @@ function app_stop {
   fi
 }
 
+function app_run {
+  local -r APP_NAME=$1
+  local -r APP_PATH=$2
+  local -r APP_WORKER=$3
+  local -r APP_CMD=${@:4}
+
+  echo "Entering ${APP_PATH}..."
+  cd ${APP_PATH}
+
+  # Create a subshell to prevent poluting our environment since we need to
+  # export the necessary environemnt variables for this application.
+  (
+    # Skip fetching environment if it's hipache we're starting
+    if [[ ${APP_NAME} != "hipache" ]]; then
+      echo "Fetching environment..."
+      while read -r env; do
+        export ${env}
+      done < <(hipache_config_get ${APP_NAME})
+    fi
+
+    echo "Executing command..."
+    docker-compose run ${APP_WORKER} ${APP_CMD}
+  )
+}
+
 #######################################
 # CLI definition
 # Arguments:
@@ -289,6 +314,19 @@ case "${CMD}" in
       exit 0
     fi
 
+    ;;
+
+  run)
+    if [[ "$3" == "-h" || "$3" == "--help" ]]; then
+      echo "Usage: docker-paas [APPLICATION] run [WORKER] [CMD..]"
+      exit 0
+    fi
+
+    APP_WORKER=$3
+    APP_CMD=${@:4}
+
+    app_run ${APP_NAME} ${APP_PATH} ${APP_WORKER} ${APP_CMD}
+    exit 0
     ;;
 
   start)
