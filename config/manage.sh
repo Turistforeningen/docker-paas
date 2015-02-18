@@ -240,6 +240,12 @@ case "$2" in
     ;;
 
   start)
+    # Special case for Hipache
+    if [[ $APP_NAME == "hipache" ]]; then
+      hipache_start
+      exit 0
+    fi
+
     APP_START_HARD=false
     APP_START_SOFT=false
 
@@ -254,14 +260,8 @@ case "$2" in
       fi
     done
 
-    if [[ $APP_NAME == "hipache" ]]; then
-      hipache_start
-      exit 0
-    else
-      app_start $APP_NAME $APP_PATH $APP_START_HARD
-      exit 0
-    fi
-
+    app_start $APP_NAME $APP_PATH $APP_START_HARD
+    exit 0
     ;;
 
   status)
