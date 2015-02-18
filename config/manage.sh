@@ -166,7 +166,6 @@ function app_start {
     if [[ ${APP_NAME} != "hipache" ]]; then
       echo "Fetching environment..."
       while read -r env; do
-        echo ${env}
         export ${env}
       done < <(hipache_config_get ${APP_NAME})
     fi
