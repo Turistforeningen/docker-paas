@@ -165,6 +165,7 @@ function app_start {
 function app_stop {
   local -r APP_NAME=$1
   local -r APP_PATH=$2
+  local -r CONTAINER_RM=$3
 
   echo "Entering ${APP_PATH}..."
   cd ${APP_PATH}
@@ -172,7 +173,7 @@ function app_stop {
   echo "Stopping containers..."
   docker-compose stop || exit 1
 
-  if [[ $3 ]]; then
+  if [[ $CONTAINER_RM == true ]]; then
     echo "Removing container data..."
     docker-compose rm --force || exit 1
   fi
