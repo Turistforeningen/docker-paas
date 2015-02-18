@@ -142,7 +142,7 @@ function app_start {
       export ${env}
     done < <(hipache_config_get ${APP_NAME})
 
-    if [[ ${REBUILD} ]]; then
+    if [[ ${REBUILD} == true ]]; then
       echo "(Re)building containers..."
       docker-compose pull && docker-compose build || exit 1
     fi
