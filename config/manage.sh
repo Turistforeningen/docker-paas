@@ -221,6 +221,18 @@ function app_stop {
   fi
 }
 
+#######################################
+# Run command inside of an app container
+# Globals:
+#   None
+# Arguments:
+#   1 APP_NAME
+#   2 APP_PATH
+#   3 APP_WORKER
+#   4 APP_CMD
+# Returns:
+#   None
+#######################################
 function app_run {
   local -r APP_NAME=$1
   local -r APP_PATH=$2
