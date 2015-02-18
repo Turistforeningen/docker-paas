@@ -15,24 +15,6 @@ readonly DOCKER0_IP=$(
 )
 
 #######################################
-# Starts the Hipache proxy container
-# Globals:
-#   None
-# Arguments:
-#   None
-# Returns:
-#   None
-#######################################
-function hipache_start {
-  echo "Entering ${PAAS_HIPACHE_DIR}..."
-  cd ${PAAS_HIPACHE_DIR}
-
-  echo "Starting hipache..."
-  docker-compose build
-  docker-compose up -d
-}
-
-#######################################
 # Update Hipache routing configuration
 # Globals:
 #   PAAS_APP_DOMAIN
@@ -123,12 +105,14 @@ function hipache_config_get {
 # Arguments:
 #   - $1 APP_NAME
 #   - $2 APP_PATH
-#   - $3 REBUILD
+#   - $3 CONTAINER_REBUILD
+#   - $4 ROUTE_UPDATE
 #######################################
 function app_start {
   local -r APP_NAME=$1
   local -r APP_PATH=$2
-  local -r REBUILD=$3
+  local -r CONTAINER_REBUILD=$3
+  local -r ROUTE_UPDATE=$4
 
   echo "Entering ${APP_PATH}..."
   cd ${APP_PATH}
@@ -142,7 +126,7 @@ function app_start {
       export ${env}
     done < <(hipache_config_get ${APP_NAME})
 
-    if [[ ${REBUILD} == true ]]; then
+    if [[ ${CONTAINER_REBUILD} == true ]]; then
       echo "(Re)building containers..."
       docker-compose pull && docker-compose build || exit 1
     fi
@@ -151,8 +135,10 @@ function app_start {
     docker-compose up -d || exit 1
   )
 
-  echo "Updating routes..."
-  hipache_frontend_update ${APP_NAME} $(docker-compose port www 8080)
+  if [[ ${ROUTE_UPDATE} == true ]]; then
+    echo "Updating routes..."
+    hipache_frontend_update ${APP_NAME} $(docker-compose port www 8080)
+  fi
 }
 
 #######################################
@@ -160,12 +146,14 @@ function app_start {
 # Arguments:
 #   - $1 APP_NAME
 #   - $2 APP_PATH
-#   - $3 RM
+#   - $3 CONTAINER_RM
+#   - $4 ROUTE_UPDATE
 #######################################
 function app_stop {
   local -r APP_NAME=$1
   local -r APP_PATH=$2
   local -r CONTAINER_RM=$3
+  local -r ROUTE_UPDATE=$4
 
   echo "Entering ${APP_PATH}..."
   cd ${APP_PATH}
@@ -178,8 +166,10 @@ function app_stop {
     docker-compose rm --force || exit 1
   fi
 
-  echo "Updating routes..."
-  hipache_frontend_remove ${APP_NAME}
+  if [[ $ROUTE_UPDATE == true ]]; then
+    echo "Updating routes..."
+    hipache_frontend_remove ${APP_NAME}
+  fi
 }
 
 #######################################
@@ -241,27 +231,25 @@ case "$2" in
     ;;
 
   start)
-    # Special case for Hipache
-    if [[ $APP_NAME == "hipache" ]]; then
-      hipache_start
-      exit 0
-    fi
-
-    APP_START_HARD=false
-    APP_START_SOFT=false
-
     if [[ $3 == "-h" || $3 == "--help" ]]; then
       echo "Usage: docker-paas [APPLICATION] start [--rebuild]"
       exit 0
     fi
 
+    APP_START_REBUILD=false
+    APP_START_ROUTE_UPDATE=true
+
     for arg; do
       if [[ $arg == "--rebuild" ]]; then
-        APP_START_HARD=true
+        APP_START_REBUILD=true
       fi
     done
 
-    app_start $APP_NAME $APP_PATH $APP_START_HARD
+    if [[ $APP_NAME == "hipache" ]]; then
+      APP_START_ROUTE_UPDATE=false
+    fi
+
+    app_start $APP_NAME $APP_PATH $APP_START_REBUILD $APP_START_ROUTE_UPDATE
     exit 0
     ;;
 
@@ -271,7 +259,13 @@ case "$2" in
     ;;
 
   stop)
+    if [[ $3 == "-h" || $3 == "--help" ]]; then
+      echo "Usage: docker-paas [APPLICATION] stop [--rm]"
+      exit 0
+    fi
+
     APP_STOP_RM=false
+    APP_START_ROUTE_UPDATE=true
 
     for arg; do
       if [[ $arg == "--rm" ]]; then
@@ -279,7 +273,12 @@ case "$2" in
       fi
     done
 
-    app_stop $APP_NAME $APP_PATH $APP_STOP_RM
+    if [[ $APP_NAME == "hipache" ]]; then
+      APP_STOP_RM=false
+      APP_START_ROUTE_UPDATE=false
+    fi
+
+    app_stop $APP_NAME $APP_PATH $APP_START_RM $APP_START_ROUTE_UPDATE
     exit 0
     ;;
 
