@@ -128,7 +128,7 @@ function app_create {
   local -r APP_BRANCH=$4
 
   echo "Cloning repository..."
-  git clone -v --single-branch --branch ${APP_BRANCH} -- ${APP_REPO} ${APP_PATH}
+  git clone -v --origin source --single-branch --branch ${APP_BRANCH} -- ${APP_REPO} ${APP_PATH}
 
   echo "Entering ${APP_PATH}..."
   cd ${APP_PATH}
@@ -279,7 +279,7 @@ function app_update {
   cd ${APP_PATH}
 
   echo "Updating git repository..."
-  git pull -f origin || exit 1
+  git pull -f source || exit 1
   git submodule update
 
   app_start $APP_NAME $APP_PATH $APP_REBUILD $ROUTE_UPDATE
