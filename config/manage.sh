@@ -431,7 +431,7 @@ case "${CMD}" in
 
     for arg; do
       if [[ "${arg}" == "--rebuild" ]]; then
-        APP_START_REBUILD=true
+        APP_REBUILD=true
       fi
     done
 
