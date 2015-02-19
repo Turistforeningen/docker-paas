@@ -128,7 +128,7 @@ function app_create {
   local -r APP_BRANCH=$4
 
   echo "Cloning repository..."
-  git clone -v --origin source --single-branch --branch ${APP_BRANCH} -- ${APP_REPO} ${APP_PATH}
+  git clone -v --origin source --single-branch --branch ${APP_BRANCH} -- ${APP_REPO} ${APP_PATH} || exit 1
 
   echo "Entering ${APP_PATH}..."
   cd ${APP_PATH}
