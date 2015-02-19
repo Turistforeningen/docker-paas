@@ -280,6 +280,7 @@ function app_update {
 
   echo "Updating git repository..."
   git pull -f source || exit 1
+  git submodule init
   git submodule update
 
   app_start $APP_NAME $APP_PATH $APP_REBUILD $ROUTE_UPDATE
