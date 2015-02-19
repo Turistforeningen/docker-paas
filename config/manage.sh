@@ -374,20 +374,20 @@ case "${CMD}" in
       exit 0
     fi
 
-    APP_START_REBUILD=false
-    APP_START_ROUTE_UPDATE=true
+    APP_REBUILD=false
+    APP_ROUTE_UPDATE=true
 
     for arg; do
       if [[ "${arg}" == "--rebuild" ]]; then
-        APP_START_REBUILD=true
+        APP_REBUILD=true
       fi
     done
 
     if [[ "${APP_NAME}" == "hipache" ]]; then
-      APP_START_ROUTE_UPDATE=false
+      APP_ROUTE_UPDATE=false
     fi
 
-    app_start $APP_NAME $APP_PATH $APP_START_REBUILD $APP_START_ROUTE_UPDATE
+    app_start $APP_NAME $APP_PATH $APP_REBUILD $APP_ROUTE_UPDATE
     exit 0
     ;;
 
@@ -402,21 +402,21 @@ case "${CMD}" in
       exit 0
     fi
 
-    APP_STOP_RM=false
-    APP_STOP_ROUTE_UPDATE=true
+    APP_RM=false
+    APP_ROUTE_UPDATE=true
 
     for arg; do
       if [[ "${arg}" == "--rm" ]]; then
-        APP_STOP_RM=true
+        APP_RM=true
       fi
     done
 
     if [[ "${APP_NAME}" == "hipache" ]]; then
-      APP_STOP_RM=false
-      APP_STOP_ROUTE_UPDATE=false
+      APP_RM=false
+      APP_ROUTE_UPDATE=false
     fi
 
-    app_stop $APP_NAME $APP_PATH $APP_STOP_RM $APP_STOP_ROUTE_UPDATE
+    app_stop $APP_NAME $APP_PATH $APP_RM $APP_ROUTE_UPDATE
     exit 0
     ;;
 
