@@ -15,7 +15,7 @@ sh -c "echo deb https://get.docker.com/ubuntu docker main > /etc/apt/sources.lis
 apt-get update && apt-get install -y python-setuptools lxc-docker-1.5.0
 
 # Install Fig
-easy_install pip && pip install -U git+https://github.com/docker/fig.git
+easy_install pip && pip install -U docker-compose
 
 # Fix broken dependency (docker/fig#918)
 pip uninstall requests -y && pip install requests==2.4.3
