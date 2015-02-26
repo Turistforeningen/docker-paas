@@ -12,7 +12,7 @@ apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8
 # Add the Docker repository to your apt sources list, update and install the
 # lxc-docker package.
 sh -c "echo deb https://get.docker.com/ubuntu docker main > /etc/apt/sources.list.d/docker.list"
-apt-get update && apt-get install -y python-setuptools lxc-docker-1.5.0
+apt-get update && apt-get install -y python-setuptools lxc-docker-1.5.0 apparmor
 
 # Install Fig
 easy_install pip && pip install -U docker-compose
