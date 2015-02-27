@@ -55,5 +55,5 @@ cd /var/www
 EOF
 
 # Clean up so we don't waste our space
-apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /wheels/*
+apt-get -y autoclean && apt-get -y autoremove && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
