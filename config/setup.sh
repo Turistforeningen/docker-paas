@@ -1,4 +1,4 @@
-!#/bin/bash
+#!/bin/bash
 
 # First, check that your APT system can deal with https URLs: the file
 # /usr/lib/apt/methods/https should exist. If it doesn't, you need to install
