@@ -1,0 +1,8 @@
+# Ubuntu 14.04 have Transparent Huge Pages (THP) support enabled by default in
+# its kernel. This will create latency and memory usage issues with Redis. To
+# fix this issue run the command 'echo never >
+# /sys/kernel/mm/transparent_hugepage/enabled' as root, and add it to the
+# /etc/rc.local in order to retain the setting after a reboot. Redis must be
+# restarted after THP is disabled.
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
+exit 0

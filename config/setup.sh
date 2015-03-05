@@ -34,6 +34,13 @@ gpasswd -a vagrant docker
 mv /etc/default/docker /etc/default/docker.back
 ln -s /var/www/config/docker.conf /etc/default/docker
 
+# Dissable Transparent Huge Pages (THP)
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
+
+# Roll our own rc.local (persistent THP deisable)
+mv /etc/rc.local /etc/rc.local.back
+ln -s /var/www/config/docker.conf /etc/rc.local
+
 # Restart the Docker daemon.
 service docker restart
 
