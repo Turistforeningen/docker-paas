@@ -15,8 +15,6 @@ apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8
 # lxc-docker package.
 sh -c "echo deb https://get.docker.com/ubuntu docker main > /etc/apt/sources.list.d/docker.list"
 apt-get update \
-  && apt-get dist-upgrade -y \
-  && apt-get update \
   && apt-get -y --no-install-recommends install \
       python-setuptools lxc-docker-1.5.0 linux-image-extra-$(uname -r) # apparmor
 
