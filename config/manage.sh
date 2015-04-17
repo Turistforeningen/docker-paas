@@ -139,6 +139,25 @@ function app_create {
 }
 
 #######################################
+# Output application logs
+# Globals:
+#   None
+# Arguments:
+#   1 APP_PATH
+#   @ APP_SERVICES
+# Returns:
+#   None
+#######################################
+function app_logs {
+  local -r APP_PATH=$1
+  local -r APP_SERVICES=${@:2}
+
+  cd ${APP_PATH}
+
+  docker-compose logs ${APP_SERVICES}
+}
+
+#######################################
 # Start application
 # Globals:
 #   None
@@ -356,6 +375,18 @@ case "${CMD}" in
 
     ;;
 
+  logs)
+    if [[ "$3" == "-h" || "$3" == "--help" ]]; then
+      echo "Usage: docker-paas [APPLICATION] logs [SERVICE [SERVICE [..]]]"
+      exit 0
+    fi
+
+    APP_SERVICES=${@:3}
+
+    app_logs ${APP_PATH} ${APP_SERVICES}
+    exit 0
+    ;;
+
   run)
     if [[ "$3" == "-h" || "$3" == "--help" ]]; then
       echo "Usage: docker-paas [APPLICATION] run [WORKER] [CMD..]"
@@ -371,16 +402,23 @@ case "${CMD}" in
 
   start)
     if [[ "$3" == "-h" || "$3" == "--help" ]]; then
-      echo "Usage: docker-paas [APPLICATION] start [--rebuild]"
+      echo "Usage: docker-paas [APPLICATION] start [options]"
+      echo "  --rebuild=false: Rebuild containers before stating"
+      echo "  --logs=false: Output logs after starting"
       exit 0
     fi
 
     APP_REBUILD=false
+    OUTPUT_LOGS=false
     APP_ROUTE_UPDATE=true
 
     for arg; do
       if [[ "${arg}" == "--rebuild" ]]; then
         APP_REBUILD=true
+      fi
+
+      if [[ "${arg}" == "--logs" ]]; then
+        OUTPUT_LOGS=true
       fi
     done
 
@@ -389,6 +427,11 @@ case "${CMD}" in
     fi
 
     app_start $APP_NAME $APP_PATH $APP_REBUILD $APP_ROUTE_UPDATE
+
+    if [[ "${OUTPUT_LOGS}" == "true" ]]; then
+      app_logs $APP_PATH
+    fi
+
     exit 0
     ;;
 
@@ -454,11 +497,13 @@ Usage:
 
 Commands:
   add     Add a new application
-  config  Manage app environment variables
-  run     Run command on application
-  start   Start existing application
+  config  Manage environment variables
+  logs    Output logs for application
+  run     Run command on application service
+  start   Start an existing application
   status  Get status of application
-  stop    Stop running application
+  stop    Stop a running application
+  update  Update and start an application
 EOF
     exit 1
     ;;
