@@ -18,11 +18,8 @@ apt-get update \
   && apt-get -y --no-install-recommends install \
       python-setuptools lxc-docker-1.6.0 linux-image-extra-$(uname -r) # apparmor
 
-# Install Fig
-easy_install pip && pip install -U docker-compose
-
-# Fix broken dependency (docker/fig#918)
-pip uninstall requests -y && pip install requests==2.4.3
+# Install Docker Compose
+easy_install pip && pip install -U docker-compose==1.2
 
 # Add the docker group if it doesn't already exist.
 groupadd docker
