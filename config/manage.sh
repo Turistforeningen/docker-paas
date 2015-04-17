@@ -139,6 +139,25 @@ function app_create {
 }
 
 #######################################
+# Output application logs
+# Globals:
+#   None
+# Arguments:
+#   1 APP_PATH
+#   @ APP_SERVICES
+# Returns:
+#   None
+#######################################
+function app_logs {
+  local -r APP_PATH=$1
+  local -r APP_SERVICES=${@:2}
+
+  cd ${APP_PATH}
+
+  docker-compose logs ${APP_SERVICES}
+}
+
+#######################################
 # Start application
 # Globals:
 #   None
@@ -373,15 +392,21 @@ case "${CMD}" in
     if [[ "$3" == "-h" || "$3" == "--help" ]]; then
       echo "Usage: docker-paas [APPLICATION] start [options]"
       echo "  --rebuild=false: Rebuild containers before stating"
+      echo "  --logs=false: Output logs after starting"
       exit 0
     fi
 
     APP_REBUILD=false
+    OUTPUT_LOGS=false
     APP_ROUTE_UPDATE=true
 
     for arg; do
       if [[ "${arg}" == "--rebuild" ]]; then
         APP_REBUILD=true
+      fi
+
+      if [[ "${arg}" == "--logs" ]]; then
+        OUTPUT_LOGS=true
       fi
     done
 
@@ -390,6 +415,11 @@ case "${CMD}" in
     fi
 
     app_start $APP_NAME $APP_PATH $APP_REBUILD $APP_ROUTE_UPDATE
+
+    if [[ "${OUTPUT_LOGS}" == "true" ]]; then
+      app_logs $APP_PATH
+    fi
+
     exit 0
     ;;
 
