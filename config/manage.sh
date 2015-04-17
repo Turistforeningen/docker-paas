@@ -205,6 +205,25 @@ function app_start {
 }
 
 #######################################
+# Application staus
+# Globals:
+#   None
+# Arguments:
+#   1 APP_PATH
+#   @ APP_SERVICES
+# Returns:
+#   None
+#######################################
+function app_status {
+  local -r APP_PATH=$1
+  local -r APP_SERVICES=${@:2}
+
+  cd ${APP_PATH}
+
+  docker-compose ps ${APP_SERVICES}
+}
+
+#######################################
 # Stop application
 # Globals:
 #   None
@@ -436,8 +455,15 @@ case "${CMD}" in
     ;;
 
   status)
-    echo "Status not implemeted"
-    exit 1
+    if [[ "$3" == "-h" || "$3" == "--help" ]]; then
+      echo "Usage: docker-paas [APPLICATION] status [SERVICE [SERVICE [..]]]"
+      exit 0
+    fi
+
+    APP_SERVICES=${@:3}
+
+    app_status ${APP_PATH} ${APP_SERVICES}
+    exit 0
     ;;
 
   stop)
