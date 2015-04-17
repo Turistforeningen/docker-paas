@@ -372,15 +372,55 @@ case "${CMD}" in
 
   config)
     if [[ "$3" == "-h" || "$3" == "--help" ]]; then
-      echo "Usage: docker-paas [APPLICATION] config [KEY [VAL|--rm]]"
+      echo "Usage: docker-paas [APPLICATION] config [KEY [VAL]]"
+      echo "  --rm: remove environment key"
+      echo "  --envdir: read environment variables from ./env directory"
       exit 0
     fi
 
     APP_CONFIG_KEY=$3
     APP_CONFIG_VAL=$4
 
+    APP_CONFIG_RM=false
+    APP_CONFIG_ENVDIR=false
+
+    for arg; do
+      if [[ "${arg}" == "--rm" ]]; then
+        APP_CONFIG_RM=true
+      fi
+
+      if [[ "${arg}" == "--envdir" ]]; then
+        APP_CONFIG_ENVDIR=true
+      fi
+    done
+
+    # Set environment variable from ./env dir
+    if [[ "${APP_CONFIG_ENVDIR}" == "true" ]]; then
+      if [ ! -d "${APP_PATH}/env/" ]; then
+        echo "No env directory found!"
+        exit 1
+      fi
+
+      for path in ${APP_PATH}/env/*; do
+        name=${path##*/}
+        # Do not include dotfiles or empty directory (*)
+        if [[ "$name" != "*" ]] && [[ ${name:0:1} != "." ]]; then
+          if [[ "${APP_CONFIG_RM}" == "true" ]]; then
+            echo "Removing ${name}"
+            hipache_config_set ${APP_NAME} ${name}
+          else
+            echo "Setting ${name} to $(cat $path)"
+            hipache_config_set ${APP_NAME} ${name} $(cat $path)
+          fi
+        fi
+      done
+
+      exit 0
+    fi
+
+    # Set one off environment varaible
     if [[ ${APP_CONFIG_KEY} && ${APP_CONFIG_VAL} ]]; then
-      if [[ "${APP_CONFIG_VAL}" == "--rm" ]]; then
+      if [[ "${APP_CONFIG_RM}" == "true" ]]; then
         hipache_config_set ${APP_NAME} ${APP_CONFIG_KEY}
         exit 0
       else
