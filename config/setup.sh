@@ -16,13 +16,10 @@ apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 36A1D7869245C8
 sh -c "echo deb https://get.docker.com/ubuntu docker main > /etc/apt/sources.list.d/docker.list"
 apt-get update \
   && apt-get -y --no-install-recommends install \
-      python-setuptools lxc-docker-1.5.0 linux-image-extra-$(uname -r) # apparmor
+      python-setuptools lxc-docker-1.6.0 linux-image-extra-$(uname -r) # apparmor
 
-# Install Fig
-easy_install pip && pip install -U docker-compose
-
-# Fix broken dependency (docker/fig#918)
-pip uninstall requests -y && pip install requests==2.4.3
+# Install Docker Compose
+easy_install pip && pip install -U docker-compose==1.2
 
 # Add the docker group if it doesn't already exist.
 groupadd docker
