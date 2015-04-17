@@ -375,6 +375,18 @@ case "${CMD}" in
 
     ;;
 
+  logs)
+    if [[ "$3" == "-h" || "$3" == "--help" ]]; then
+      echo "Usage: docker-paas [APPLICATION] logs [SERVICE [SERVICE [..]]]"
+      exit 0
+    fi
+
+    APP_SERVICES=${@:3}
+
+    app_logs ${APP_PATH} ${APP_SERVICES}
+    exit 0
+    ;;
+
   run)
     if [[ "$3" == "-h" || "$3" == "--help" ]]; then
       echo "Usage: docker-paas [APPLICATION] run [WORKER] [CMD..]"
