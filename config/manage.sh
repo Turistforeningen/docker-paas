@@ -371,7 +371,8 @@ case "${CMD}" in
 
   start)
     if [[ "$3" == "-h" || "$3" == "--help" ]]; then
-      echo "Usage: docker-paas [APPLICATION] start [--rebuild]"
+      echo "Usage: docker-paas [APPLICATION] start [options]"
+      echo "  --rebuild=false: Rebuild containers before stating"
       exit 0
     fi
 
