@@ -497,11 +497,13 @@ Usage:
 
 Commands:
   add     Add a new application
-  config  Manage app environment variables
-  run     Run command on application
-  start   Start existing application
+  config  Manage environment variables
+  logs    Output logs for application
+  run     Run command on application service
+  start   Start an existing application
   status  Get status of application
-  stop    Stop running application
+  stop    Stop a running application
+  update  Update and start an application
 EOF
     exit 1
     ;;
