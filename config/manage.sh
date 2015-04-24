@@ -31,16 +31,18 @@ function hipache_frontend_update {
   local -r APP_HOSTNAME="$1.${PAAS_APP_DOMAIN}"
   local -r APP_PORTS="$2"
 
-  ${REDISCLI} DEL frontend:${APP_HOSTNAME}
-  ${REDISCLI} RPUSH frontend:${APP_HOSTNAME} ${APP_NAME}
+  local backends=()
 
   while read -r line; do
     port=`echo ${line} | awk -F: '{print $2}'`
-    addr="http://$DOCKER0_IP:$port"
+    backends+=("http://${DOCKER0_IP}:${port}")
+  done < <(echo "${APP_PORTS}")
 
-    ${REDISCLI} RPUSH frontend:${APP_HOSTNAME} $addr
+  echo DEL frontend:${APP_HOSTNAME}
+  ${REDISCLI} DEL frontend:${APP_HOSTNAME}
 
-  done < <(echo "$APP_PORTS")
+  echo RPUSH frontend:${APP_HOSTNAME} ${APP_NAME} ${backends[@]}
+  ${REDISCLI} RPUSH frontend:${APP_HOSTNAME} ${APP_NAME} ${backends[@]}
 
   ${REDISCLI} LRANGE frontend:${APP_HOSTNAME} 0 -1
 }
