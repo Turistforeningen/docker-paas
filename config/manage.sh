@@ -23,28 +23,42 @@ readonly DOCKER0_IP=$(
 # Arguments:
 #   1 APP_NAME
 #   2 APP_PORTS (new line seperated)
+#   3 APP_HOSTNAME (optional)
 # Returns:
 #   None
 #######################################
 function hipache_frontend_update {
   local -r APP_NAME=$1
-  local -r APP_HOSTNAME="$1.${PAAS_APP_DOMAIN}"
   local -r APP_PORTS="$2"
 
-  local backends=()
+  # Check for custom domain
+  if [[ -z $3 ]]; then
+    local -r APP_HOSTNAME="${APP_NAME}.${PAAS_APP_DOMAIN}"
+  else
+    local -r APP_HOSTNAME="$3"
+  fi
 
+  # Get backend IPs
+  local backends=()
   while read -r line; do
     port=`echo ${line} | awk -F: '{print $2}'`
     backends+=("http://${DOCKER0_IP}:${port}")
   done < <(echo "${APP_PORTS}")
 
+  # Delete the old backends from Hipache
   echo DEL frontend:${APP_HOSTNAME}
   ${REDISCLI} DEL frontend:${APP_HOSTNAME}
 
+  # Push the new backends to Hipache
   echo RPUSH frontend:${APP_HOSTNAME} ${APP_NAME} ${backends[@]}
   ${REDISCLI} RPUSH frontend:${APP_HOSTNAME} ${APP_NAME} ${backends[@]}
 
-  ${REDISCLI} LRANGE frontend:${APP_HOSTNAME} 0 -1
+  # Check for alternative domains
+  if [[ -z $3 ]]; then
+    while read -r domain; do
+      hipache_frontend_update ${APP_NAME} ${APP_PORTS} ${domain}
+    done < <(${REDISCLI} LRANGE alias:${APP_NAME} 0 -1)
+  fi
 }
 
 #######################################
@@ -54,14 +68,29 @@ function hipache_frontend_update {
 #   REDISCLI
 # Arguments:
 #   1 APP_NAME
+#   2 APP_HOSTNAME (optional)
 # Returns:
 #   None
 #######################################
 function hipache_frontend_remove {
   local -r APP_NAME=$1
-  local -r APP_HOSTNAME="$1.${PAAS_APP_DOMAIN}"
 
+  # Check for custom domain
+  if [[ -z $2 ]]; then
+    local -r APP_HOSTNAME="${APP_NAME}.${PAAS_APP_DOMAIN}"
+  else
+    local -r APP_HOSTNAME="$2"
+  fi
+
+  # Remove domain from Hipache routing
   ${REDISCLI} DEL frontend:${APP_HOSTNAME}
+
+  # Check for alternative domains
+  if [[ -z $2 ]]; then
+    while read -r domain; do
+      hipache_frontend_remove ${APP_NAME} ${domain}
+    done < <(${REDISCLI} LRANGE alias:${APP_NAME} 0 -1)
+  fi
 }
 
 #######################################
@@ -327,6 +356,28 @@ function app_update {
 }
 
 #######################################
+# Manage app domains (aliases)
+# Globals:
+#   REDISCLI
+# Arguments:
+#   1 APP_NAME
+#   3 APP_HOSTNAME
+# Returns:
+#   None
+#######################################
+function app_alias {
+  local -r APP_NAME=$1
+  local -r APP_HOSTNAME=$2
+
+  if [[ -z ${APP_HOSTNAME} ]]; then
+    ${REDISCLI} LRANGE alias:${APP_NAME} 0 -1
+  else
+    echo RPUSH alias:jotunheimr alias.foo.bar
+    ${REDISCLI} RPUSH alias:${APP_NAME} ${APP_HOSTNAME}
+  fi
+}
+
+#######################################
 # CLI definition
 # Arguments:
 #   1 APP_NAME
@@ -370,6 +421,15 @@ case "${CMD}" in
     fi
 
     app_create ${APP_NAME} ${APP_PATH} ${APP_REPO} ${APP_BRANCH}
+    ;;
+
+  alias)
+    if [[ "$3" == "-h" || "$3" == "--help" ]]; then
+      echo "Usage: docker-paas [APPLICATION] alias [DOMAIN]"
+      exit 0
+    fi
+
+    app_alias ${APP_NAME} $3
     ;;
 
   config)
@@ -565,6 +625,7 @@ Usage:
 
 Commands:
   add     Add a new application
+  alias   Manage aliased domains
   config  Manage environment variables
   logs    Output logs for application
   run     Run command on application service
