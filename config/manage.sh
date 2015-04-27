@@ -105,7 +105,7 @@ function hipache_frontend_remove {
 # Returns:
 #   None
 #######################################
-function hipache_config_set {
+function app_config_set {
   local -r APP_HOSTNAME="$1.${PAAS_APP_DOMAIN}"
   local -r KEY="$2"
   local -r VAL="$3"
@@ -127,7 +127,7 @@ function hipache_config_set {
 # Returns:
 #   None
 #######################################
-function hipache_config_get {
+function app_config_get {
   local -r APP_HOSTNAME="$1.${PAAS_APP_DOMAIN}"
 
   while read -r line; do
@@ -217,7 +217,7 @@ function app_start {
       echo "Fetching environment..."
       while read -r env; do
         export ${env}
-      done < <(hipache_config_get ${APP_NAME})
+      done < <(app_config_get ${APP_NAME})
     fi
 
     if [[ "${CONTAINER_REBUILD}" == "true" ]]; then
@@ -318,7 +318,7 @@ function app_run {
       echo "Fetching environment..."
       while read -r env; do
         export ${env}
-      done < <(hipache_config_get ${APP_NAME})
+      done < <(app_config_get ${APP_NAME})
     fi
 
     echo "Executing command..."
@@ -469,10 +469,10 @@ case "${CMD}" in
         if [[ "$name" != "*" ]] && [[ ${name:0:1} != "." ]]; then
           if [[ "${APP_CONFIG_RM}" == "true" ]]; then
             echo "Removing ${name}"
-            hipache_config_set ${APP_NAME} ${name}
+            app_config_set ${APP_NAME} ${name}
           else
             echo "Setting ${name} to $(cat $path)"
-            hipache_config_set ${APP_NAME} ${name} $(cat $path)
+            app_config_set ${APP_NAME} ${name} $(cat $path)
           fi
         fi
       done
@@ -483,14 +483,14 @@ case "${CMD}" in
     # Set one off environment varaible
     if [[ ${APP_CONFIG_KEY} && ${APP_CONFIG_VAL} ]]; then
       if [[ "${APP_CONFIG_RM}" == "true" ]]; then
-        hipache_config_set ${APP_NAME} ${APP_CONFIG_KEY}
+        app_config_set ${APP_NAME} ${APP_CONFIG_KEY}
         exit 0
       else
-        hipache_config_set ${APP_NAME} ${APP_CONFIG_KEY} ${APP_CONFIG_VAL}
+        app_config_set ${APP_NAME} ${APP_CONFIG_KEY} ${APP_CONFIG_VAL}
         exit 0
       fi
     else
-      hipache_config_get ${APP_NAME}
+      app_config_get ${APP_NAME}
       exit 0
     fi
 
