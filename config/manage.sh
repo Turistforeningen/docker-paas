@@ -56,7 +56,9 @@ function hipache_frontend_update {
   # Check for alternative domains
   if [[ -z $3 ]]; then
     while read -r domain; do
-      hipache_frontend_update ${APP_NAME} ${APP_PORTS} ${domain}
+      if [[ ${domain} != "" ]]; then
+        hipache_frontend_update ${APP_NAME} ${APP_PORTS} ${domain}
+      fi
     done < <(${REDISCLI} LRANGE alias:${APP_NAME} 0 -1)
   fi
 }
@@ -88,7 +90,9 @@ function hipache_frontend_remove {
   # Check for alternative domains
   if [[ -z $2 ]]; then
     while read -r domain; do
-      hipache_frontend_remove ${APP_NAME} ${domain}
+      if [[ ${domain} != "" ]]; then
+        hipache_frontend_remove ${APP_NAME} ${domain}
+      fi
     done < <(${REDISCLI} LRANGE alias:${APP_NAME} 0 -1)
   fi
 }
