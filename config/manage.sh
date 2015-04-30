@@ -376,7 +376,7 @@ function app_alias {
   if [[ -z ${APP_HOSTNAME} ]]; then
     ${REDISCLI} LRANGE alias:${APP_NAME} 0 -1
   else
-    echo RPUSH alias:jotunheimr alias.foo.bar
+    echo RPUSH alias:${APP_NAME} ${APP_HOSTNAME}
     ${REDISCLI} RPUSH alias:${APP_NAME} ${APP_HOSTNAME}
   fi
 }
