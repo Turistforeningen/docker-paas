@@ -38,6 +38,13 @@ echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled
 mv /etc/rc.local /etc/rc.local.back
 ln -s /var/www/config/rc.local /etc/rc.local
 
+# Prevent overcommit of memory
+sysctl vm.overcommit_memory=1
+
+# Roll our own sysctl.conf (overcommit_memory)
+mv /etc/sysctl.conf /etc/sysctl.conf.back
+ln -s /var/www/config/sysctl.conf /etc/sysctl.conf
+
 # Restart the Docker daemon.
 service docker restart
 
