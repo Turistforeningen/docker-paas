@@ -102,7 +102,7 @@ manage.sh <APP> stop
 Configure environment variables per application.
 
 ```
-manage.sh <APP> configure [<KEY> [<VAL>] [--rm]]
+manage.sh <APP> config [<KEY> [<VAL>] [--rm]]
 ```
 
 ## [MIT Licensed](https://github.com/Turistforeningen/docker-paas/blob/master/LICENSE)
