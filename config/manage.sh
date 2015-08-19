@@ -6,7 +6,7 @@
 #   PAAS_APP_DIR
 #   PAAS_HIPACHE_DIR
 
-readonly REDISCLI='docker run --link hipache_redis_1:redis redis:2.8 redis-cli -h redis'
+readonly REDISCLI='docker run --rm --link hipache_redis_1:redis redis:2.8 redis-cli -h redis'
 readonly DOCKER0_IP=$(
   ifconfig docker0 \
     | grep "inet addr" \
