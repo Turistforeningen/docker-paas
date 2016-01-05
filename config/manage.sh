@@ -409,6 +409,12 @@ if [[   -d "${APP_PATH}" && "${CMD}" == "add" ]]; then
   exit 1
 fi
 
+# Check if docker-paas.yml exists
+if [[ -f "${APP_PATH}/docker-paas.yml" ]]; then
+  echo "Using ${APP_PATH}/docker-paas.yml config"
+  export COMPOSE_FILE="${APP_PATH}/docker-paas.yml"
+fi
+
 # CLI commands
 case "${CMD}" in
   add)
